@@ -4,16 +4,16 @@ AIE 2017 semester 1: Complex Game Systems
 Design Brief:  Utility AI - Space Explorers
 ===
 
-A Exploration Mothership is drifting through an asteroid field, and hosts a fleet of drones.
-Points of Scientific Interest also randomly spawn with some rarity [src: Data]
-Asteroids contain resources in random abundance [src: Ore, Reactant].
-Asteroids that strike Mothership deal damage to Shield.
-Anthing that strikes Drones deals damage to DroneHP
+A Exploration Mothership is drifting through an asteroid field, and hosts a fleet of drones.  
+Points of Scientific Interest also randomly spawn with some rarity [src: Data].  
+Asteroids contain resources in random abundance [src: Ore, Reactant].  
+Asteroids that strike Mothership deal damage to Shield.  
+Anthing that strikes Drones deals damage to DroneHP  
 
-Mothership performs resource conversion, drones perform resource acquisition.
+Mothership performs resource conversion, drones perform resource acquisition.  
 
-Mothership and Drones perfom tasks based on fuzzy needs assessment.
-Mothership MAY split "Engineering" and "Flight Deck" tasks into parallel sets.
+Mothership and Drones perfom tasks based on fuzzy needs assessment.  
+Mothership MAY split "Engineering" and "Flight Deck" tasks into parallel sets.  
 
 
 Mothership 
