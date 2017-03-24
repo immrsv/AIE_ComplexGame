@@ -3,7 +3,6 @@ AIE 2017 semester 1: Complex Game Systems
 
 Design Brief:  Utility AI - Space Explorers
 ===
-
 A Exploration Mothership is drifting through an asteroid field, and hosts a fleet of drones to facilitate resource acquisition.  
 Points of Scientific Interest also randomly spawn with some rarity [src: Data].  
 Asteroids contain resources in random abundance [src: Ore, Reactant].  
@@ -22,6 +21,7 @@ Mothership
  Properties (constant, 'unattended' process):
  - Converts Fuel into Energy 
  - Converts Energy into Shield
+
  Tasks:
  - Converts Energy and Ore into Metal
  - Converts Energy and Reactant into Fuel
@@ -40,6 +40,7 @@ Drones:
  Properties:
  - Converts Fuel into Energy
  - Converts Fuel into Acceleration
+
  Tasks:
  - Mine Asteroid (src: Ore or Reactant)
  - Attack Asteroid (prevent collision damage)
