@@ -10,7 +10,8 @@ Asteroids contain resources in random abundance [src: Ore, Reactant].
 Asteroids that strike Mothership deal damage to Shield.  
 Anthing that strikes Drones deals damage to DroneHP  
 
-Mothership performs resource conversion, drones perform resource acquisition.  
+Mothership performs resource conversion [src: Metal, Fuel, Energy, Shield, Science, Drone].  
+Drones perform resource acquisition [src: Data, Ore, Reactant].    
 
 Mothership and Drones perfom tasks based on fuzzy needs assessment.  
 Mothership MAY split "Engineering" and "Flight Deck" tasks into parallel sets.  
@@ -25,7 +26,7 @@ Mothership
  - Converts Energy and Ore into Metal
  - Converts Energy and Reactant into Fuel
  - Converts Energy and Data into Science
- - Uses Energy to Scan Asteroid ("discover" resources and possible collision damage)
+ - Uses Energy to Scan Asteroid [src: Intel] <br/> ("discover" resources and possible collision damage)
  - Converts Energy, Fuel and Metal into Drones
  - Launches Drones
  - Docks Drones
