@@ -1,0 +1,13 @@
+Drone AI
+
+Actions
+ - Update Local Mothership Status
+ - Mine (Ore, Reactant, Data)
+ - Attack
+ - Wander
+ - Unload
+ - Repair
+ - Scrap
+
+
+Processes:
