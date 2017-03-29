@@ -26,7 +26,7 @@ public class NavigationControlSystem : MonoBehaviour {
 	}
 	
 	
-	void FixedUpdate () {
+	void Update () {
         if (Checkpoints.Count == 0) return; // Nothing to see here
 
         if (IsTargetReached()) SelectNextTarget();
@@ -71,9 +71,9 @@ public class NavigationControlSystem : MonoBehaviour {
         var cognitionRoll = Mathf.Pow(Random.Range(0.0f, 1.0f), 8);
         var cognitionResult = cognitionRoll >= cognitionChance;
 
-        Debug.Log("Cognition Test: Threshold @ " + cognitionThreshold.ToString("N3") + " , Chance @ " + cognitionChance.ToString("N3") + " , Roll @ " + cognitionRoll.ToString("N3"));
+        //Debug.Log("Cognition Test: Threshold @ " + cognitionThreshold.ToString("N3") + " , Chance @ " + cognitionChance.ToString("N3") + " , Roll @ " + cognitionRoll.ToString("N3"));
 
-        if (cognitionResult) Debug.Log("Achieved Target at Distance: " + targetDistance);
+        //if (cognitionResult) Debug.Log("Achieved Target at Distance: " + targetDistance);
 
         return cognitionResult;
     }
