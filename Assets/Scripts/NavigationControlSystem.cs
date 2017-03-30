@@ -10,7 +10,9 @@ public class NavigationControlSystem : MonoBehaviour {
     public float TargetInnerRadius = 2.0f;
 
     public bool IsIdling = true;
-    public Vector3 NextTarget;
+    public Vector3? Target;
+
+    public bool IsArrived { get; protected set; }
 
     private FlightControlSystem FCS;
 
@@ -22,28 +24,35 @@ public class NavigationControlSystem : MonoBehaviour {
 	
 	void Update () {
         var desiredMotion = new PhysicsIntent();
-        
-        if (!IsIdling)
+
+        if (!IsArrived)
         {
-            var targetPosn = NextTarget;
-            var targetDirn = targetPosn - transform.position;
+            IsArrived = IsTargetReached();
+            if (!IsIdling)
+            {
+                var targetPosn = Target.Value;
+                var targetDirn = targetPosn - transform.position;
 
-            var targetLocalDirn = transform.InverseTransformDirection(targetDirn);
-            var targetLocalRotn = (Quaternion.FromToRotation(Vector3.forward, targetLocalDirn)).eulerAngles;
-            targetLocalRotn.Scale(new Vector3(0.2f, 0.2f, 0.2f));
+                var targetLocalDirn = transform.InverseTransformDirection(targetDirn);
+                var targetLocalRotn = (Quaternion.FromToRotation(Vector3.forward, targetLocalDirn)).eulerAngles;
+                targetLocalRotn.Scale(new Vector3(0.2f, 0.2f, 0.2f));
 
-            desiredMotion.Linear = targetLocalDirn;
-            desiredMotion.Angular = targetLocalRotn;
+                desiredMotion.Linear = targetLocalDirn;
+                desiredMotion.Angular = targetLocalRotn;
+            }
+
+            FCS.DesiredMotion = desiredMotion;
         }
-
-        FCS.DesiredMotion = desiredMotion;
 	}
 
     void DoHoldingPattern() {
         FCS.DesiredMotion = new PhysicsIntent();
     }
+
     bool IsTargetReached() {
-        var targetDistance = (transform.position - NextTarget).magnitude;
+        if (!Target.HasValue) return true;
+
+        var targetDistance = (transform.position - Target.Value).magnitude;
 
         if (targetDistance > TargetOuterRadius) return false;
         if (targetDistance < TargetInnerRadius) return true;

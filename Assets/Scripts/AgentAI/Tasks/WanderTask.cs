@@ -3,34 +3,49 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace AgentAI.Actions
+namespace AgentAI.Tasks
 {
-    public class WanderAction : Action
+    public class WanderTask : AgentTask
     {
-        public float modifier = 1;
+        public float NeedValue = 0.5f;
         public float wanderTime = 4.0f;
 
         private float timeToDestChange = 0f;
-
+        
 
         public override void Enter()
         {
-            
         }
 
-        public override float Evaluate()
+        public override float Priority
         {
-            return modifier * 0.5f;
+            get
+            {
+                return NeedValue;
+            }
+        }
+
+        public override bool CanExit
+        {
+            get
+            {
+                return true;
+            }
         }
 
         public override void Exit()
         {
         }
 
-        public override void UpdateAction()
+        public override void UpdateTask()
         {
             if (Time.realtimeSinceStartup > timeToDestChange)
                 ChangeDestination();
+        }
+
+        private void Wander()
+        {
+
         }
 
         private void ChangeDestination()
@@ -40,7 +55,7 @@ namespace AgentAI.Actions
             Vector3 poi = UnityEngine.Random.insideUnitSphere;
             poi.Scale(new Vector3(50, 50, 50));
 
-            GetComponent<NavigationControlSystem>().NextTarget = poi;
+            GetComponent<NavigationControlSystem>().Target = poi;
         }
     }
 }

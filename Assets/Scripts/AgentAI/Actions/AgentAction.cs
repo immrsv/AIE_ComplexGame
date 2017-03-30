@@ -1,13 +1,13 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Linq;
+using System.Text;
 
 namespace AgentAI.Actions
 {
-    public abstract class Action : MonoBehaviour
+    public abstract class AgentAction
     {
-
-        public abstract float Evaluate();
+        public abstract bool IsComplete { get; }
         public abstract void UpdateAction();
         public abstract void Enter();
         public abstract void Exit();

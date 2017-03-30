@@ -1,11 +1,22 @@
 Drone AI
 
+
+TODO:
+
+ - Start with MINE and UNLOAD Actions
+
+
 Actions
- - Update Local Mothership Status
+ - SyncData (Update Asteroid Knowledgebase from Mothership)
  - Mine (Ore, Reactant, Data)
  - Attack
  - Wander
  - Unload
+   > Seek Mothership
+   > Request Dock Posn
+   > Seek Dock Posn
+   > "Bind" to Dock Posn
+   > Transfer Resources
  - Repair
  - Scrap
 

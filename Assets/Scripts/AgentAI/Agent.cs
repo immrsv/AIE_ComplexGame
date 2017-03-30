@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using AgentAI.Actions;
+using AgentAI.Tasks;
 
 namespace AgentAI
 {
@@ -9,43 +9,66 @@ namespace AgentAI
     public class Agent : MonoBehaviour
     {
 
-        Action[] Actions;
+        AgentTask[] Tasks;
 
-        public Action CurrentAction;
+        private AgentTask _CurrentTask;
+        public AgentTask CurrentTask { get
+            {
+                return _CurrentTask;
+            } set
+            {
+                if (_CurrentTask)
+                    _CurrentTask.Exit();
+
+                _CurrentTask = value;
+
+                if (_CurrentTask)
+                    _CurrentTask.Enter();
+            }
+        }
+
+        private System.Text.StringBuilder sb;
 
         // Use this for initialization
         void Start()
         {
-            Actions = GetComponents<Action>();
+            Tasks = GetComponents<AgentTask>();
         }
 
         // Update is called once per frame
         void Update()
         {
-            Action best = GetBestAction();
+            sb = new System.Text.StringBuilder("Agent:");
 
-            if ( CurrentAction != best)
+            AgentTask best = GetBestTask();
+
+            if (CurrentTask != best && (CurrentTask == null || CurrentTask.CanExit))
             {
-                if (CurrentAction)
-                    CurrentAction.Exit();
-
-                CurrentAction = best;
-
-                if (CurrentAction)
-                    CurrentAction.Enter();
+                CurrentTask = best;
+                Debug.Log("Agent Re-tasked: " + CurrentTask.GetType().ToString());
             }
 
-            if (CurrentAction) CurrentAction.UpdateAction();
-        }
+            if (CurrentTask)
+                CurrentTask.UpdateTask();
 
-        Action GetBestAction()
+            GameObject.Find("AgentWatcher").GetComponent<UnityEngine.UI.Text>().text = sb.ToString();
+        }
+        
+
+        AgentTask GetBestTask()
         {
-            Action action = null;
+            AgentTask action = null;
             float bestValue = 0.0f;
 
-            foreach(Action a in Actions)
+            sb.Append("\n=====   Task Priorities   =====");
+
+            foreach(AgentTask a in Tasks)
             {
-                float value = a.Evaluate();
+                float value = a.Priority;
+                if (a == CurrentTask) value += 0.1f; // "Commitment"
+
+                sb.Append("\n" + value.ToString("N3") + " : " + a.GetType().Name);
+
                 if ( action == null || value > bestValue)
                 {
                     action = a;
