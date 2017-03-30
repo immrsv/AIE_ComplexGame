@@ -5,12 +5,47 @@ using System.Collections.Generic;
 using UnityEngine;
 using AgentAI.Actions;
 
-namespace AgentAI.Tasks
-{
-    public class UnloadTask : AgentTask
-    {
+namespace AgentAI.Tasks {
+    public class UnloadTask : AgentTask {
+        public float MinimumFill = 0.5f;
+        public float MaximumPriority = 0.9f;
 
         public float ResourceTransferRate = 5.0f;
+
+        private GameObject ms;
+        private NavigationControlSystem NCS;
+
+        // Use this for initialization
+        void Start() {
+            ms = GameObject.Find("Mothership");
+            NCS = GetComponent<NavigationControlSystem>();
+        }
+
+        public override float Priority {
+            get {
+                var storage = GetComponent<ResourceContainer>();
+
+                // Return 0% need below 50% capacity, raise need quadritically until 90% need at 100% full (allow for Evading Enemies)
+                return storage.PercentFull < MinimumFill ? 0.0f : MaximumPriority * Mathf.Pow(storage.PercentFull, 2.0f);
+            }
+        }
+
+        public new bool CanExit {
+            get {
+                if (CurrentAction == null) return true; // No Actions queued
+
+                var result = true;
+                try {
+                    // Can Exit if Not a TransferResource action, or the action is complete
+                    result = !(CurrentAction is TransferResourceAction) || CurrentAction.IsComplete;
+                } catch (System.InvalidOperationException err) {
+                    Debug.LogError(GetType().Name + "::CanExit{Get} > " + err.GetType().Name + "::" + err.Message);
+
+                }
+                return result;
+            }
+        }
+
         /// <summary>
         /// Stage in Process to achieve action
         ///  1. Approach Mothership
@@ -19,22 +54,8 @@ namespace AgentAI.Tasks
         ///  4. "Bind" to Docking Node
         ///  5. Transfer Resources
         /// </summary>
-        private Queue<AgentAction> Actions = new Queue<AgentAction>();
-        private float stageBegan;
-
-        private GameObject ms;
-        private NavigationControlSystem NCS;
-
-        // Use this for initialization
-        void Start()
-        {
-            ms = GameObject.Find("Mothership");
-            NCS = GetComponent<NavigationControlSystem>();
-        }
-
-
-        public override void Enter()
-        {
+        public override void Enter() {
+            
             // Rebuild Action queue
             Actions.Clear();
             Actions.Enqueue(new MoveAction(NCS, ms.transform.position));
@@ -43,68 +64,10 @@ namespace AgentAI.Tasks
             stageBegan = Time.realtimeSinceStartup;
         }
 
-        public override float Priority
-        {
-            get
-            {
-                var storage = GetComponent<ResourceContainer>();
 
-                // Return 0% need below 50% capacity, raise need quadritically until 90% need at 100% full (allow for Evading Enemies)
-                return storage.PercentFull < 0.5f ? 0.0f : 0.9f * Mathf.Pow(storage.PercentFull, 2.0f);
-            }
+        public override void Exit() {
         }
 
-        public override bool CanExit
-        {
-            get
-            {
-                if (Actions.Count == 0) return true; // No Actions queued
-
-                var result = true;
-                try
-                {
-                    // Can Exit if Not a TransferResource action, or the action is complete
-                    result = !(Actions.Peek() is TransferResourceAction) || Actions.Peek().IsComplete;
-                }
-                catch (System.InvalidOperationException err)
-                {
-                    Debug.LogError(GetType().Name + "::CanExit{Get} > " + err.GetType().Name + "::" + err.Message);
-
-                }
-                return result;
-            }
-        }
-
-        public override void Exit()
-        {
-        }
-
-        public override void UpdateTask()
-        {
-            if (Actions.Count == 0) return; // No More Actions
-
-            if (Actions.Peek().IsComplete) // If Action is complete, pop from queue
-            {
-                Debug.Log("Ship [" + gameObject.name + "] completed action [" + Actions.Peek().GetType().Name + "].");
-                Actions.Dequeue().Exit();
-
-
-                if (Actions.Count > 0)
-                {
-                    Debug.Log("Ship [" + gameObject.name + "] completed action [" + Actions.Peek().GetType().Name + "].");
-                    Actions.Peek().Enter();
-                }
-                else
-                {
-                    Debug.Log("Ship [" + gameObject.name + "] completed ALL actions.");
-                }
-
-                stageBegan = Time.realtimeSinceStartup;
-            }
-
-            if ( Actions.Count > 0)
-                Actions.Peek().UpdateAction();
-        }
 
     }
 }

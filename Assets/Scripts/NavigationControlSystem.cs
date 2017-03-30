@@ -10,7 +10,8 @@ public class NavigationControlSystem : MonoBehaviour {
     public float TargetInnerRadius = 2.0f;
 
     public bool IsIdling = true;
-    public Vector3? Target;
+    public Vector3? _Target;
+    public Vector3? Target { get { return _Target; } set { _Target = value; IsArrived = false; } }
 
     public bool IsArrived { get; protected set; }
 

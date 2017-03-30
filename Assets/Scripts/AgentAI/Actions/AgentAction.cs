@@ -7,6 +7,8 @@ namespace AgentAI.Actions
 {
     public abstract class AgentAction
     {
+        public bool PrintDebuggingOutput = false;
+
         public abstract bool IsComplete { get; }
         public abstract void UpdateAction();
         public abstract void Enter();
