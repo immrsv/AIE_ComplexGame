@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
+using Resources;
+
 namespace AgentAI.Actions
 {
     public class TransferResourceAction : AgentAction
@@ -38,7 +40,7 @@ namespace AgentAI.Actions
             if (Src.Items.Count == 0) return;
 
             var resource = Src.Items.First().Key;
-            var qty = Mathf.Max(Src.Items[resource], UnitsPerSecond * Time.deltaTime);
+            var qty = Mathf.Min(Src.Items[resource], UnitsPerSecond * Time.deltaTime);
 
             if (!Dst.Items.ContainsKey(resource))
                 Dst.Items.Add(resource, 0.0f);

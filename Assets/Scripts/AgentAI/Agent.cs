@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using AgentAI.Tasks;
 
@@ -9,63 +10,98 @@ namespace AgentAI
     public class Agent : MonoBehaviour
     {
 
-        AgentTask[] Tasks;
+        private class TaskPool {
+            public AgentTask[] AllTasks;
+            private AgentTask _CurrentTask;
+            public float CurrentTaskBegan;
 
-        private AgentTask _CurrentTask;
-        public AgentTask CurrentTask { get
-            {
-                return _CurrentTask;
-            } set
-            {
-                if (_CurrentTask)
-                    _CurrentTask.Exit();
+            public AgentTask CurrentTask {
+                get {
+                    return _CurrentTask;
+                }
+                set {
+                    if (_CurrentTask)
+                        _CurrentTask.Exit();
 
-                _CurrentTask = value;
+                    _CurrentTask = value;
 
-                if (_CurrentTask)
-                    _CurrentTask.Enter();
+                    if (_CurrentTask) {
+                        _CurrentTask.Enter();
+                        CurrentTaskBegan = Time.realtimeSinceStartup;
+                    }
+                }
             }
         }
 
+        public bool DisplayDebug;
+
+        private Dictionary<uint, TaskPool> TaskPools = new Dictionary<uint, TaskPool>();
+
         private System.Text.StringBuilder sb;
+
+        public void OnMouseOver() {
+            Debug.Log("Mouse over " + gameObject.name);
+        }
 
         // Use this for initialization
         void Start()
         {
-            Tasks = GetComponents<AgentTask>();
+            var tasks = GetComponents<AgentTask>().GroupBy(m =>m.TaskPool);
+
+            foreach (var pool in tasks) {
+                TaskPools.Add(pool.Key, new TaskPool { AllTasks = pool.ToArray() });
+            }
         }
 
         // Update is called once per frame
         void Update()
         {
-            sb = new System.Text.StringBuilder("Agent:");
+            sb = new System.Text.StringBuilder("Agent\t:: " + gameObject.name);
 
-            AgentTask best = GetBestTask();
+            sb.Append("\n===============================");
 
-            if (CurrentTask != best && (CurrentTask == null || CurrentTask.CanExit))
-            {
-                CurrentTask = best;
-                Debug.Log("Agent Re-tasked: " + CurrentTask.GetType().ToString());
+            foreach (var kvp in TaskPools.OrderBy(m => m.Key)) {
+
+                var pool = kvp.Value;
+                sb.Append("\nPool \t:: " + kvp.Key);
+                sb.Append("\n=====    Current Task     =====");
+
+                if (pool.CurrentTask != null) {
+                    sb.Append("\n" + pool.CurrentTask.GetType().Name + (!pool.CurrentTask.CanExit ? " [LOCKED]" : ""));
+                    sb.Append("\n> " + ((pool.CurrentTask.CurrentAction != null) ? pool.CurrentTask.CurrentAction.GetType().Name : "<no action>"));
+                } else {
+                    sb.Append("\n<no task>\n > <no action>");
+                }
+
+                AgentTask best = GetBestTask(pool);
+
+                if (pool.CurrentTask != best && (pool.CurrentTask == null || pool.CurrentTask.CanExit)) {
+                    pool.CurrentTask = best;
+                }
+
+
+                if (pool.CurrentTask)
+                    pool.CurrentTask.UpdateTask();
+
+                sb.Append("\n===============================");
             }
 
-            if (CurrentTask)
-                CurrentTask.UpdateTask();
-
-            GameObject.Find("AgentWatcher").GetComponent<UnityEngine.UI.Text>().text = sb.ToString();
+            if (DisplayDebug)
+                GameObject.Find("AgentWatcher").GetComponent<UnityEngine.UI.Text>().text = sb.ToString();
         }
         
 
-        AgentTask GetBestTask()
+        AgentTask GetBestTask(TaskPool pool)
         {
             AgentTask action = null;
             float bestValue = 0.0f;
 
             sb.Append("\n=====   Task Priorities   =====");
 
-            foreach(AgentTask a in Tasks)
+            foreach(AgentTask a in pool.AllTasks)
             {
                 float value = a.Priority;
-                if (a == CurrentTask) value += 0.1f; // "Commitment"
+                if (a == pool.CurrentTask) value += 0.1f; // "Commitment"
 
                 sb.Append("\n" + value.ToString("N3") + " : " + a.GetType().Name);
 
@@ -75,6 +111,7 @@ namespace AgentAI
                     bestValue = value;
                 }
             }
+            
 
             return action;
         }

@@ -5,52 +5,33 @@ using System.Collections.Generic;
 using UnityEngine;
 using AgentAI.Actions;
 
+using Resources;
+
 namespace AgentAI.Tasks
 {
     public class UnloadTask : AgentTask
     {
 
-        public float ResourceTransferRate = 5.0f;
-        /// <summary>
-        /// Stage in Process to achieve action
-        ///  1. Approach Mothership
-        ///  2. Request Docking Node (Position)
-        ///  3. Approach Docking Node (Position)
-        ///  4. "Bind" to Docking Node
-        ///  5. Transfer Resources
-        /// </summary>
-        private Queue<AgentAction> Actions = new Queue<AgentAction>();
-        private float stageBegan;
+        public float TransferRate = 5.0f;
+        
 
-        private GameObject ms;
-        private NavigationControlSystem NCS;
+        public GameObject Mothership;
+        public NavigationControlSystem NCS;
 
-        // Use this for initialization
-        void Start()
-        {
-            ms = GameObject.Find("Mothership");
-            NCS = GetComponent<NavigationControlSystem>();
-        }
-
-
-        public override void Enter()
-        {
-            // Rebuild Action queue
-            Actions.Clear();
-            Actions.Enqueue(new MoveAction(NCS, ms.transform.position));
-            Actions.Enqueue(new TransferResourceAction(this.GetComponent<ResourceContainer>(), ms.GetComponent<ResourceContainer>(), ResourceTransferRate));
-
-            stageBegan = Time.realtimeSinceStartup;
-        }
+        private ResourceContainer TransferFrom;
+        private ResourceContainer TransferTo;
 
         public override float Priority
         {
             get
             {
-                var storage = GetComponent<ResourceContainer>();
+                //if (storage.PercentFull < 0.5f)
+                //    return 0.0f;
+                //else
+                //    return 0.9f * Mathf.Pow(storage.PercentFull, 2.0f);
 
-                // Return 0% need below 50% capacity, raise need quadritically until 90% need at 100% full (allow for Evading Enemies)
-                return storage.PercentFull < 0.5f ? 0.0f : 0.9f * Mathf.Pow(storage.PercentFull, 2.0f);
+                // Return 0 % need below 50 % capacity, raise need geometricly until 90 % need at 100 % full(allow for Evading Enemies)
+                return (TransferFrom.PercentFull < 0.5f) ? 0.0f : (MaxPriority * Mathf.Pow(TransferFrom.PercentFull, 2.0f));
             }
         }
 
@@ -64,7 +45,7 @@ namespace AgentAI.Tasks
                 try
                 {
                     // Can Exit if Not a TransferResource action, or the action is complete
-                    result = !(Actions.Peek() is TransferResourceAction) || Actions.Peek().IsComplete;
+                    result = !(CurrentAction is TransferResourceAction) || Actions.Peek().IsComplete;
                 }
                 catch (System.InvalidOperationException err)
                 {
@@ -75,35 +56,43 @@ namespace AgentAI.Tasks
             }
         }
 
-        public override void Exit()
+        // Use this for initialization
+        void Start()
         {
+
+            if ( Mothership == null ) Mothership = GameObject.Find("Mothership");
+            if (NCS == null ) NCS = GetComponent<NavigationControlSystem>();
+
+            TransferFrom = GetComponent<ContainerCollection>()["CargoBay"];
+            TransferTo = Mothership.GetComponent<ContainerCollection>()["CargoBay"];
         }
 
-        public override void UpdateTask()
+
+        public override void Enter()
         {
-            if (Actions.Count == 0) return; // No More Actions
+            /// <summary>
+            /// Stage in Process to achieve action
+            ///  1. Approach Mothership
+            ///  2. Request Docking Node (Position)
+            ///  3. Approach Docking Node (Position)
+            ///  4. "Bind" to Docking Node
+            ///  5. Transfer Resources
+            /// </summary>
+            /// 
+            // Rebuild Action queue
+            Actions.Clear();
+            Actions.Enqueue(new MoveAction(NCS, Mothership, 25.0f));
+            Actions.Enqueue(new TransferResourceAction(TransferFrom, TransferTo, TransferRate));
 
-            if (Actions.Peek().IsComplete) // If Action is complete, pop from queue
-            {
-                Debug.Log("Ship [" + gameObject.name + "] completed action [" + Actions.Peek().GetType().Name + "].");
-                Actions.Dequeue().Exit();
+
+            Actions.Peek().Enter();
+            stageBegan = Time.realtimeSinceStartup;
+        }
 
 
-                if (Actions.Count > 0)
-                {
-                    Debug.Log("Ship [" + gameObject.name + "] completed action [" + Actions.Peek().GetType().Name + "].");
-                    Actions.Peek().Enter();
-                }
-                else
-                {
-                    Debug.Log("Ship [" + gameObject.name + "] completed ALL actions.");
-                }
 
-                stageBegan = Time.realtimeSinceStartup;
-            }
-
-            if ( Actions.Count > 0)
-                Actions.Peek().UpdateAction();
+        public override void Exit()
+        {
         }
 
     }

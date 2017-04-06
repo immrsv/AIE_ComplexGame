@@ -3,67 +3,40 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using AgentAI.Actions;
+using Resources;
 
 namespace AgentAI.Tasks
 {
     public class AcquireResourceTask : AgentTask
     {
-        public ResourceContainer.ResourceType Resource;
-        public float ResourceTransferRate = 1.0f;
+        public ResourceType Resource;
+        public float TransferRate = 1.0f;
 
-        /// <summary>
-        /// Stage in Process to achieve action
-        ///  1. Identify Resource Object [On Enter]
-        ///  2. Approach Resource Object [As Action]
-        ///  3. "Mine" Object (Transfer Resources) [As Action]
-        /// </summary>
-        private Queue<AgentAction> Actions = new Queue<AgentAction>();
-        private float stageBegan;
-
-        private GameObject ms;
-        private NavigationControlSystem NCS;
+        public GameObject Mothership;
+        public NavigationControlSystem NCS;
 
         private GameObject target;
+        private ResourceContainer TransferTo;
 
-
-        // Use this for initialization
-        void Start()
-        {
-            ms = GameObject.Find("Mothership");
-            NCS = GetComponent<NavigationControlSystem>();
-        }
-
-
-        public override void Enter()
-        {
-            // Identify Target to Acquire From
-            target = GameObject.Find("Asteroid 01");
-
-            // Rebuild Action queue
-            Actions.Clear();
-            Actions.Enqueue(new MoveAction(NCS, target.transform.position));
-            Actions.Enqueue(new TransferResourceAction(target.GetComponent<ResourceContainer>(), this.GetComponent<ResourceContainer>(), ResourceTransferRate));
-
-            stageBegan = Time.realtimeSinceStartup;
-        }
-
+        private float storageModifier;
+        
 
         public override float Priority
         {
             get
             {
                 // if has target and target storage is empty, return 0% need (nothing to do here)
-                if (target != null && target.GetComponent<ResourceContainer>().TotalQuantity == 0) return 0;
+                if (target != null && target.GetComponent<ContainerCollection>()[null].TotalQuantity == 0) return 0;
 
                 // Reduce this need by how full our storage is
-                var storageModifier = 1.0f - Mathf.Pow(GetComponent<ResourceContainer>().PercentFull, 2.0f);
+                storageModifier = 1.0f - Mathf.Pow(TransferTo.PercentFull, 2.0f);
 
                 float result = 0.0f;
 
                 try
                 {
                     // Echo Mothership's Need for this resource (if already transferring resources, ignore storage modifier)
-                    result = 0.8f * ((Actions.Count != 0 && Actions.Peek() is TransferResourceAction) ? 1.0f : storageModifier);
+                    result = MaxPriority * ((CurrentAction is TransferResourceAction) ? 1.0f : storageModifier);
                 }
                 catch (System.InvalidOperationException err)
                 {
@@ -74,13 +47,41 @@ namespace AgentAI.Tasks
             }
         }
 
-        public override bool CanExit
+
+        // Use this for initialization
+        void Start()
         {
-            get
-            {
-                return true;
-            }
+            if (Mothership == null)
+                Mothership = GameObject.Find("Mothership");
+
+            if (NCS == null)
+                NCS = GetComponent<NavigationControlSystem>();
+            
+            TransferTo = GetComponent<ContainerCollection>()["CargoBay"];
         }
+
+
+        public override void Enter()
+        {
+            // Identify Target to Acquire From
+            target = GameObject.Find("Asteroid 01");
+
+            /// <summary>
+            /// Stage in Process to achieve action
+            ///  1. Identify Resource Object [On Enter]
+            ///  2. Approach Resource Object [As Action]
+            ///  3. "Mine" Object (Transfer Resources) [As Action]
+            /// </summary>
+            // Rebuild Action queue
+            Actions.Clear();
+            Actions.Enqueue(new MoveAction(NCS, target));
+            Actions.Enqueue(new TransferResourceAction(target.GetComponent<ContainerCollection>()[null], TransferTo, TransferRate));
+
+            Actions.Peek().Enter();
+            stageBegan = Time.realtimeSinceStartup;
+        }
+
+
 
         public override void Exit()
         {
@@ -92,19 +93,10 @@ namespace AgentAI.Tasks
 
             if (Actions.Peek().IsComplete) // If Action is complete, pop from queue
             {
-                Debug.Log("Ship [" + gameObject.name + "] doing [" + GetType().Name + "] completed action [" + Actions.Peek().GetType().Name + "].");
                 Actions.Dequeue().Exit();
 
-
                 if (Actions.Count > 0)
-                {
-                    Debug.Log("Ship [" + gameObject.name + "] doing [" + GetType().Name + "] completed action [" + Actions.Peek().GetType().Name + "].");
                     Actions.Peek().Enter();
-                }
-                else
-                {
-                    Debug.Log("Ship [" + gameObject.name + "] doing [" + GetType().Name + "] completed ALL actions.");
-                }
 
                 stageBegan = Time.realtimeSinceStartup;
             }

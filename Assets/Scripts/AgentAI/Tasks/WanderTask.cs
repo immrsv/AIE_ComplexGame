@@ -7,21 +7,22 @@ namespace AgentAI.Tasks
 {
     public class WanderTask : AgentTask
     {
-        public float NeedValue = 0.5f;
-        public float wanderTime = 4.0f;
+        public float NeedRate = 0.01f;
+        public float AttentionSpan = 4.0f;
 
         private float timeToDestChange = 0f;
-        
 
-        public override void Enter()
-        {
-        }
+        private float NeedValue = 0.0f;
+
+        private NavigationControlSystem NCS;
+
+
 
         public override float Priority
         {
             get
             {
-                return NeedValue;
+                return Mathf.Min(NeedValue, MaxPriority);
             }
         }
 
@@ -33,29 +34,53 @@ namespace AgentAI.Tasks
             }
         }
 
+        public void Start()
+        {
+            NCS = GetComponent<NavigationControlSystem>();
+        }
+
+        public void Update()
+        {
+            NeedValue += NeedRate * Time.deltaTime;
+        }
+
+        public override void Enter()
+        {
+            ChangeDestination();
+        }
+
         public override void Exit()
         {
+            NCS.Target = null;
+
         }
 
         public override void UpdateTask()
         {
+            NeedValue -= UnityEngine.Random.Range(1.5f, 2.5f) * NeedRate * Time.deltaTime;
+
             if (Time.realtimeSinceStartup > timeToDestChange)
                 ChangeDestination();
         }
-
-        private void Wander()
-        {
-
-        }
-
+        
         private void ChangeDestination()
         {
-            timeToDestChange = Time.realtimeSinceStartup + wanderTime;
+            timeToDestChange = Time.realtimeSinceStartup + AttentionSpan;
 
             Vector3 poi = UnityEngine.Random.insideUnitSphere;
             poi.Scale(new Vector3(50, 50, 50));
 
-            GetComponent<NavigationControlSystem>().Target = poi;
+            SetTarget(poi);
+        }
+
+        private void SetTarget(Vector3 poi)
+        {
+            var temp = new GameObject();
+            temp.transform.position = poi;
+
+            NCS.Target = temp;
+            NCS.State = NavigationControlSystem.NavigationState.Seek;
+            NCS.StateOnArrival = NavigationControlSystem.NavigationState.Idle;
         }
     }
 }

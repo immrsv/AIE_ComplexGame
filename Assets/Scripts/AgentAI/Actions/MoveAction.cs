@@ -9,11 +9,17 @@ namespace AgentAI.Actions
     public class MoveAction : AgentAction
     {
         private NavigationControlSystem NCS;
-        private Vector3 Destination;
+        private GameObject Destination;
 
-        public override bool IsComplete { get { return NCS.IsArrived; } }
+        public override bool IsComplete
+        {
+            get
+            {
+                return NCS.IsArrived;
+            }
+        }
 
-        public MoveAction(NavigationControlSystem ncs, Vector3 destination)
+        public MoveAction(NavigationControlSystem ncs, GameObject destination, float outerRange = 5.0f)
         {
             NCS = ncs;
             Destination = destination;
@@ -22,6 +28,8 @@ namespace AgentAI.Actions
         public override void Enter()
         {
             NCS.Target = Destination;
+            NCS.State = NavigationControlSystem.NavigationState.Seek;
+            NCS.StateOnArrival = NavigationControlSystem.NavigationState.Idle;
         }
 
         public override void Exit()
