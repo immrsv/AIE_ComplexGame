@@ -16,6 +16,7 @@ namespace AgentAI.Tasks
         public NavigationControlSystem NCS;
 
         private GameObject target;
+        private ResourceContainer targetContainer;
         private ResourceContainer TransferTo;
 
         private float storageModifier;
@@ -27,7 +28,7 @@ namespace AgentAI.Tasks
             {
 
                 // if has target and target storage is empty, return 0% need (nothing to do here)
-                if (target != null && target.GetComponent<ContainerCollection>()[null].TotalQuantity == 0) return 0;
+                if (target != null && targetContainer.TotalQuantity == 0) return 0;
 
                 // Reduce this need by how full our storage is
                 storageModifier = 1.0f - Mathf.Pow(TransferTo.PercentFull, 2.0f);
@@ -66,6 +67,9 @@ namespace AgentAI.Tasks
         {
             // Identify Target to Acquire From
             target = GameObject.Find("Asteroid 01");
+
+            if (target)
+                targetContainer = target.GetComponent<ContainerCollection>()[null];
 
             /// <summary>
             /// Stage in Process to achieve action

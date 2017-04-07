@@ -15,7 +15,7 @@ namespace AgentAI.Tasks
         private float NeedValue = 0.0f;
 
         private NavigationControlSystem NCS;
-
+        private GameObject Target;
 
 
         public override float Priority
@@ -46,13 +46,15 @@ namespace AgentAI.Tasks
 
         public override void Enter()
         {
+            Target = new GameObject("Wander Target");
+
             ChangeDestination();
         }
 
         public override void Exit()
         {
-            NCS.Target = null;
-
+            NCS.SetIdle();
+            Destroy(Target);
         }
 
         public override void UpdateTask()
@@ -75,12 +77,8 @@ namespace AgentAI.Tasks
 
         private void SetTarget(Vector3 poi)
         {
-            var temp = new GameObject();
-            temp.transform.position = poi;
-
-            NCS.Target = temp;
-            NCS.State = NavigationControlSystem.NavigationState.Seek;
-            NCS.StateOnArrival = NavigationControlSystem.NavigationState.Idle;
+            Target.transform.position = poi;
+            NCS.SetNavTask(Target);
         }
     }
 }

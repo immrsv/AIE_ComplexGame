@@ -27,14 +27,12 @@ namespace AgentAI.Actions
 
         public override void Enter()
         {
-            NCS.Target = Destination;
-            NCS.State = NavigationControlSystem.NavigationState.Seek;
-            NCS.StateOnArrival = NavigationControlSystem.NavigationState.Idle;
+            NCS.SetNavTask(Destination);
         }
 
         public override void Exit()
         {
-            NCS.Target = null;
+            NCS.SetIdle();
         }
 
         public override void UpdateAction()

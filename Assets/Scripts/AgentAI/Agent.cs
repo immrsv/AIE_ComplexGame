@@ -25,6 +25,8 @@ namespace AgentAI
 
                     _CurrentTask = value;
 
+                    Debug.Log("Retasked: " + (_CurrentTask ? _CurrentTask.GetType().Name : "<null>"));
+
                     if (_CurrentTask) {
                         _CurrentTask.Enter();
                         CurrentTaskBegan = Time.realtimeSinceStartup;
@@ -39,9 +41,7 @@ namespace AgentAI
 
         private System.Text.StringBuilder sb;
 
-        public void OnMouseOver() {
-            Debug.Log("Mouse over " + gameObject.name);
-        }
+        public string Log {  get { return sb.ToString(); } }
 
         // Use this for initialization
         void Start()
@@ -77,6 +77,7 @@ namespace AgentAI
 
                 if (pool.CurrentTask != best && (pool.CurrentTask == null || pool.CurrentTask.CanExit)) {
                     pool.CurrentTask = best;
+                    
                 }
 
 
@@ -87,7 +88,7 @@ namespace AgentAI
             }
 
             if (DisplayDebug)
-                GameObject.Find("AgentWatcher").GetComponent<UnityEngine.UI.Text>().text = sb.ToString();
+                GameObject.Find("TxtSelectionConsole").GetComponent<UnityEngine.UI.Text>().text = sb.ToString();
         }
         
 

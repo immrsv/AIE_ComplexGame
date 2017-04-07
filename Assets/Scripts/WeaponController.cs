@@ -10,7 +10,7 @@ public class WeaponController : MonoBehaviour
 
 	void Start ()
 	{
-		//InvokeRepeating ("Fire", delay, fireRate);
+		InvokeRepeating ("Fire", delay, fireRate);
 	}
 
 	void Fire ()

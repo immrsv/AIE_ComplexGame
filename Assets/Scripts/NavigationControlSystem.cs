@@ -5,7 +5,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class NavigationControlSystem : MonoBehaviour {
     
-    public enum NavigationState
+    public enum NavigationMode
     {
         Idle,
         Seek,
@@ -13,94 +13,99 @@ public class NavigationControlSystem : MonoBehaviour {
         Orbit
     }
 
-    public float TargetOuterRadius = 7.0f;
-    public float TargetInnerRadius = 2.0f;
-    
-    public Collider PersonalSpace;
+    public bool AvoidObstacles;
 
+    public Vector3 _CurrentWaypoint;
 
-    public GameObject Target;
+    private GameObject Target;
 
-    public NavigationState State;
-    public NavigationState StateOnArrival;
+    private NavigationMode Mode;
 
     private FlightControlSystem FCS;
+
+    private Stack<Vector3> Waypoints = new Stack<Vector3>();
+    
+
 
     public bool IsArrived
     {
         get
         {
-            if (Target == null ) return true; // No Target
-
-            var targetDistance = (transform.position - Target.transform.position).magnitude;
-
-            if (targetDistance > TargetOuterRadius) return false;
-            if (targetDistance < TargetInnerRadius) return true;
-
-            var cognitionBand = TargetOuterRadius - TargetInnerRadius;
-            var cognitionThreshold = Mathf.Clamp(targetDistance - TargetInnerRadius, 0, cognitionBand) / cognitionBand;
-
-
-            var cognitionChance = Mathf.SmoothStep(0, 1, cognitionThreshold);
-            var cognitionRoll = Mathf.Pow(Random.Range(0.0f, 1.0f), 8);
-            var cognitionResult = cognitionRoll >= cognitionChance;
-
-            return cognitionResult;
+            return Target == null; // No Target, Has arrived
         }
     }
 
+    private bool IsWaypointReached { get { return (Waypoints.Count == 0 || (Waypoints.Peek() - transform.position).magnitude < 1.0f); } }
+
+    public void SetIdle() {
+        DoArrived();
+    }
+
+    public void SetNavTask( GameObject target, NavigationMode mode = NavigationMode.Seek) {
+        Target = target;
+        Mode = mode;
+        CreateWaypoints();
+    }
 
 	// Use this for initialization
 	void Start () {
         FCS = GetComponent<FlightControlSystem>();
-
-        
 	}
 	
-    public void OnTriggerEnter( Collider other  ) {
-        if (Target == null) return; // Target is not a defined object
-        if (Target.transform != other.transform.root) return; // Collided with something other than target, not relevant here
+    public void OnTriggerEnter( Collider other ) {
+        if (Target == null || Target.transform != other.transform.root) {
+            // Target is not a defined object or Collided with something other than target, not relevant here
 
-        Debug.Log(gameObject.name + " Arrived At (Proximity Collider) : " + other.transform.root.name);
-        // Arrived
-        DoArrived();
+        } else {
+            if (Mode == NavigationMode.Evade) return; // Contacted Target, but trying to evade (apparently unsuccessfully), can't "arrive" at target.
+
+            Debug.Log(gameObject.name + " Arrived At (Proximity Collider) : " + other.transform.root.name);
+
+            // Arrived
+            DoArrived();
+        }
     }
 
 	
 	void Update () {
-        
-        if (IsArrived)
-        {
-            DoArrived();
-        }
 
+        //if (IsArrived)
+        //    return;
 
-        switch (State)
+        if (IsWaypointReached)
+            DoWaypointReached();
+       
+        switch (Mode)
         {
-            case NavigationState.Idle:
+            case NavigationMode.Idle:
                 DoIdle();
                 break;
-            case NavigationState.Seek:
+            case NavigationMode.Seek:
                 DoSeek();
                 break;
-            case NavigationState.Evade:
+            case NavigationMode.Evade:
                 DoEvade();
                 break;
-            case NavigationState.Orbit:
+            case NavigationMode.Orbit:
                 DoOrbit();
                 break;
         }
 	}
 
     private void DoIdle() {
-        FCS.DesiredMotion = new PhysicsIntent();
+        //FCS.DesiredMotion = new PhysicsIntent();
     }
 
     private void DoSeek()
     {
+        if ( Waypoints.Count == 0 ) {
+            Debug.LogWarning("NavigationControlSystem on " + gameObject.name + " is Seeking without Waypoints.");
+            return;
+        }
+
         var desiredMotion = new PhysicsIntent();
 
-        var targetPosn = Target.transform.position;
+        var targetPosn = Waypoints.Peek();
         var targetDirn = targetPosn - transform.position;
 
         var targetLocalDirn = transform.InverseTransformDirection(targetDirn);
@@ -111,6 +116,8 @@ public class NavigationControlSystem : MonoBehaviour {
         desiredMotion.Angular = targetLocalRotn;
 
         FCS.DesiredMotion = desiredMotion;
+
+        FCS.MaxSpeed = (targetDirn.magnitude > 75) ? 50 : 10;
     }
 
     private void DoEvade()
@@ -124,7 +131,83 @@ public class NavigationControlSystem : MonoBehaviour {
     }
 
     private void DoArrived() {
+        Waypoints.Clear();
         Target = null;
-        State = StateOnArrival;
+        Mode = NavigationMode.Idle;
+
+        FCS.DesiredMotion = new PhysicsIntent();
+    }
+
+    private void DoWaypointReached() {
+        if (Waypoints.Count > 0) {
+            Waypoints.Pop();
+            _CurrentWaypoint = (Waypoints.Count > 0) ? Waypoints.Peek() : new Vector3(float.NaN, float.NaN, float.NaN);
+        }
+    }
+
+    private void CreateWaypoints() {
+        Debug.Log("NavigationControlSystem::CreateWaypoints() - BEGIN");
+
+        var path = new Stack<Vector3>();
+        path.Push(transform.position);
+
+        if (AvoidObstacles) {
+
+            var complexityThreshold = 50;
+            var hit = false;
+            var hitInfo = new RaycastHit();
+            var lastHit = transform;
+
+            do {
+                var ray = new Ray(path.Peek(), (Target.transform.position - path.Peek()).normalized);
+                hit = Physics.Raycast(ray, out hitInfo, (path.Peek() - Target.transform.position).magnitude);
+
+                hit = hit && (hitInfo.transform.parent ?? hitInfo.transform).gameObject != Target;
+
+                if (hit) {
+
+                    // generate offset
+                    var hitOffset = hitInfo.point - hitInfo.transform.position;
+
+                    var dirToHit = hitOffset.normalized;
+                    var dirToObj = (hitInfo.transform.position - path.Peek()).normalized;
+
+                    var hitAngle = Mathf.Acos(Vector3.Dot(dirToHit, -dirToObj));
+                    var hitAxis = Vector3.Cross(dirToHit, -dirToObj).normalized;
+
+
+                    float offsetScale = hitOffset.magnitude;
+
+                    if (hitInfo.transform == lastHit) {
+                        offsetScale += (path.Pop() - hitInfo.point).magnitude * 0.5f;
+                        Debug.Log("NavigationControlSystem::CreateWaypoints() - Re-evaluating: " + hitInfo.transform.gameObject.name);
+                    } else {
+                        Debug.Log("NavigationControlSystem::CreateWaypoints() - Avoiding: " + hitInfo.transform.gameObject.name);
+                    }
+
+                    var offset = Vector3.Cross(hitAxis, -dirToObj).normalized;
+                    offset.Scale(new Vector3(offsetScale, offsetScale, offsetScale));
+
+                    lastHit = hitInfo.transform;
+                    path.Push(hitInfo.point + offset);
+                }
+
+                if (path.Count > 20 ) {
+                    hit = false;
+                    Debug.LogWarning("NavigationControlSystem::CreateWaypoints() - Path Too Complex!");
+
+                }
+            } while (hit && --complexityThreshold >= 0);
+        }
+
+        path.Push(Target.transform.position);
+
+        // reverse order and transfer to Waypoints stack
+        Waypoints.Clear();
+        while (path.Count > 0)
+            Waypoints.Push(path.Pop());
+
+        _CurrentWaypoint = (Waypoints.Count > 0) ? Waypoints.Peek() : new Vector3(float.NaN, float.NaN, float.NaN);
+        Debug.Log("NavigationControlSystem::CreateWaypoints() - END");
     }
 }

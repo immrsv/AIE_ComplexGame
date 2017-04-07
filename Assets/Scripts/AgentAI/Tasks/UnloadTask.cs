@@ -44,7 +44,7 @@ namespace AgentAI.Tasks
                 try {
                     // Can Exit if Not a TransferResource action, or the action is complete
 
-                    result = !(CurrentAction is TransferResourceAction) || Actions.Peek().IsComplete;
+                    result = !(CurrentAction is TransferResourceAction) || CurrentAction.IsComplete;
                 }
                 catch (System.InvalidOperationException err)
                 {

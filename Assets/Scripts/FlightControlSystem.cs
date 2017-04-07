@@ -16,10 +16,14 @@ public class FlightControlSystem : MonoBehaviour {
     public ThrustPotential ThrusterOutput;
     public PhysicsIntent DesiredMotion;
 
+    public float MaxSpeed { get; set; }
+
     private Rigidbody rb;
 
     private void Start() {
         rb = GetComponent<Rigidbody>();
+
+        MaxSpeed = 10.0f;
     }
 
 	// Update is called once per physics frame
@@ -41,7 +45,7 @@ public class FlightControlSystem : MonoBehaviour {
         //rb.AddRelativeForce(accel.Linear, ForceMode.Acceleration);
         //rb.AddRelativeTorque(accel.Angular, ForceMode.Acceleration);
 
-        rb.velocity = Vector3.ClampMagnitude(desiredWorldMotion.Linear, 10);
+        rb.velocity = Vector3.ClampMagnitude(desiredWorldMotion.Linear, MaxSpeed);
         rb.angularVelocity = desiredWorldMotion.Angular;
 
 
