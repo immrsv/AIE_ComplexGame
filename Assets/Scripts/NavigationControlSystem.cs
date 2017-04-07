@@ -15,14 +15,9 @@ public class NavigationControlSystem : MonoBehaviour {
 
     public float TargetOuterRadius = 7.0f;
     public float TargetInnerRadius = 2.0f;
-
-<<<<<<< HEAD
+    
     public Collider PersonalSpace;
-=======
-    public bool IsIdling = true;
-    public Vector3? _Target;
-    public Vector3? Target { get { return _Target; } set { _Target = value; IsArrived = false; } }
->>>>>>> 189cac7474d0e284105c8345b16dde050b668048
+
 
     public GameObject Target;
 
