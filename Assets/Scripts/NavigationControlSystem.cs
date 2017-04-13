@@ -53,13 +53,13 @@ public class NavigationControlSystem : MonoBehaviour {
 	}
 	
     public void OnTriggerEnter( Collider other ) {
-        if (Target == null || Target.transform != other.transform.root) {
+        if (Target == null || Target.transform != (other.transform.root ?? other.transform)) {
             // Target is not a defined object or Collided with something other than target, not relevant here
 
         } else {
             if (Mode == NavigationMode.Evade) return; // Contacted Target, but trying to evade (apparently unsuccessfully), can't "arrive" at target.
 
-            Debug.Log(gameObject.name + " Arrived At (Proximity Collider) : " + other.transform.root.name);
+            Debug.Log(gameObject.name + "Arrived At : " + (other.transform.root ?? other.transform).name);
 
             // Arrived
             DoArrived();
@@ -107,6 +107,10 @@ public class NavigationControlSystem : MonoBehaviour {
 
         var targetPosn = Waypoints.Peek();
         var targetDirn = targetPosn - transform.position;
+        var speed = (Waypoints.Count == 1) ? (targetPosn - transform.position).magnitude : 10.0f;
+
+        targetDirn.Normalize();
+        targetDirn.Scale(new Vector3(speed, speed, speed));
 
         var targetLocalDirn = transform.InverseTransformDirection(targetDirn);
         var targetLocalRotn = (Quaternion.FromToRotation(Vector3.forward, targetLocalDirn)).eulerAngles;
@@ -174,9 +178,8 @@ public class NavigationControlSystem : MonoBehaviour {
 
                     var hitAngle = Mathf.Acos(Vector3.Dot(dirToHit, -dirToObj));
                     var hitAxis = Vector3.Cross(dirToHit, -dirToObj).normalized;
-
-
-                    float offsetScale = hitOffset.magnitude;
+                    
+                    float offsetScale = hitOffset.magnitude + 3.0f;
 
                     if (hitInfo.transform == lastHit) {
                         offsetScale += (path.Pop() - hitInfo.point).magnitude * 0.5f;
@@ -185,7 +188,7 @@ public class NavigationControlSystem : MonoBehaviour {
                         Debug.Log("NavigationControlSystem::CreateWaypoints() - Avoiding: " + hitInfo.transform.gameObject.name);
                     }
 
-                    var offset = Vector3.Cross(hitAxis, -dirToObj).normalized;
+                    var offset = Vector3.Cross(-dirToObj, hitAxis).normalized;
                     offset.Scale(new Vector3(offsetScale, offsetScale, offsetScale));
 
                     lastHit = hitInfo.transform;
@@ -209,5 +212,12 @@ public class NavigationControlSystem : MonoBehaviour {
 
         _CurrentWaypoint = (Waypoints.Count > 0) ? Waypoints.Peek() : new Vector3(float.NaN, float.NaN, float.NaN);
         Debug.Log("NavigationControlSystem::CreateWaypoints() - END");
+    }
+
+    void OnDrawGizmosSelected() {
+        Gizmos.color = Color.cyan;
+        foreach (Vector3 v in Waypoints) {
+            Gizmos.DrawSphere(v, 0.5f);
+        }
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using AgentAI.Actions;
 using Resources;
+using System;
 
 namespace AgentAI.Tasks
 {
@@ -49,7 +50,12 @@ namespace AgentAI.Tasks
                 return result;
             }
         }
-        
+
+        public override bool CanExit {
+            get {
+                return true;
+            }
+        }
         // Use this for initialization
         void Start()
         {

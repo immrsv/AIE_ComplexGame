@@ -20,14 +20,14 @@ namespace AgentAI
                     return _CurrentTask;
                 }
                 set {
-                    if (_CurrentTask)
+                    if (_CurrentTask != null)
                         _CurrentTask.Exit();
 
                     _CurrentTask = value;
 
-                    Debug.Log("Retasked: " + (_CurrentTask ? _CurrentTask.GetType().Name : "<null>"));
+                    Debug.Log("Retasked: " + (_CurrentTask != null ? _CurrentTask.GetType().Name : "<null>"));
 
-                    if (_CurrentTask) {
+                    if (_CurrentTask != null) {
                         _CurrentTask.Enter();
                         CurrentTaskBegan = Time.realtimeSinceStartup;
                     }
@@ -75,7 +75,7 @@ namespace AgentAI
 
                 AgentTask best = GetBestTask(pool);
 
-                if (pool.CurrentTask != best && (pool.CurrentTask == null || pool.CurrentTask.CanExit)) {
+                if (pool.CurrentTask == null || (pool.CurrentTask != best && pool.CurrentTask.CanExit)) {
                     pool.CurrentTask = best;
                     
                 }

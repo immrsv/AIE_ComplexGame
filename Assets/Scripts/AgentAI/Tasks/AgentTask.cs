@@ -16,7 +16,8 @@ namespace AgentAI.Tasks {
         public AgentAction CurrentAction { get { return (Actions.Count > 0) ? Actions.Peek() : null; } }
 
         public abstract float Priority { get; }
-        public virtual bool CanExit { get { return true; } }
+        //public virtual bool CanExit { get { return true; } }
+        public abstract bool CanExit { get; }
 
         public abstract void Enter();
         public abstract void Exit();

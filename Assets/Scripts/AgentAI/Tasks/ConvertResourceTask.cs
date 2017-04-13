@@ -33,7 +33,7 @@ namespace AgentAI.Tasks {
             }
         }
 
-        public new bool CanExit {  get { return Containers[Produce.Location].GetQuantity(Produce.Type) >= QtyStarved; } }
+        public override bool CanExit {  get { return Containers[Produce.Location].GetQuantity(Produce.Type) >= QtyStarved; } }
 
         public override void Enter() {
             

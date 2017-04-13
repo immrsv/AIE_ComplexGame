@@ -36,7 +36,7 @@ namespace AgentAI.Tasks
             }
         }
 
-        public new bool CanExit {
+        public override bool CanExit {
             get {
                 if (CurrentAction == null) return true; // No Actions queued
 

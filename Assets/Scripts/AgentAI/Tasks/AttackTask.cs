@@ -12,6 +12,12 @@ namespace AgentAI.Tasks {
             }
         }
 
+        public override bool CanExit {
+            get {
+                throw new NotImplementedException();
+            }
+        }
+
         public override void Enter() {
             throw new NotImplementedException();
         }

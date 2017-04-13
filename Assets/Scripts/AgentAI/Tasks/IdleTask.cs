@@ -12,6 +12,12 @@ namespace AgentAI.Tasks {
             }
         }
 
+        public override bool CanExit {
+            get {
+                return true;
+            }
+        }
+
         public override void Enter() {
         }
 
