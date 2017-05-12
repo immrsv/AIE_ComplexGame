@@ -25,7 +25,7 @@ namespace AgentAI
 
                     _CurrentTask = value;
 
-                    Debug.Log("Retasked: " + (_CurrentTask != null ? _CurrentTask.GetType().Name : "<null>"));
+                    //Debug.Log("Retasked: " + (_CurrentTask != null ? _CurrentTask.GetType().Name : "<null>"));
 
                     if (_CurrentTask != null) {
                         _CurrentTask.Enter();
@@ -34,12 +34,10 @@ namespace AgentAI
                 }
             }
         }
-
-        public bool DisplayDebug;
-
+        
         private Dictionary<uint, TaskPool> TaskPools = new Dictionary<uint, TaskPool>();
 
-        private System.Text.StringBuilder sb;
+        private System.Text.StringBuilder sb = new System.Text.StringBuilder("Update Pending");
 
         public string Log {  get { return sb.ToString(); } }
 
@@ -87,8 +85,6 @@ namespace AgentAI
                 sb.Append("\n===============================");
             }
 
-            if (DisplayDebug)
-                GameObject.Find("TxtSelectionConsole").GetComponent<UnityEngine.UI.Text>().text = sb.ToString();
         }
         
 
@@ -115,6 +111,10 @@ namespace AgentAI
             
 
             return action;
+        }
+
+        private void OnSelectionStart() {
+            //Debug.Log(gameObject.name + " IS SELECTED!");
         }
     }
 }

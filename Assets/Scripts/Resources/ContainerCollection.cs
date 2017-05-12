@@ -17,5 +17,19 @@ namespace Resources {
                 return Containers.FirstOrDefault(m => m.Name.Trim() == name.Trim());
             }
         }
+
+        public string StatusAsString() {
+            var sb = new System.Text.StringBuilder();
+
+            foreach ( var container in Containers) {
+                sb.AppendLine("Container: " + container.Name);
+                foreach ( var item in container.Items) {
+                    sb.AppendLine("> " + item.Key + ": \t" + item.Value.ToString("n2"));
+                }
+                sb.AppendLine();
+            }
+
+            return sb.ToString();
+        }
     }
 }

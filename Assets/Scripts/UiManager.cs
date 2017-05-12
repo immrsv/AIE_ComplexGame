@@ -5,34 +5,85 @@ using UnityEngine;
 using System.Linq;
 
 [DisallowMultipleComponent]
-public class UiManager: MonoBehaviour {
+public class UiManager : MonoBehaviour {
 
-    public Dictionary<string, UnityEngine.UI.Text> Widget = new Dictionary<string, UnityEngine.UI.Text>();
-    public Dictionary<string, System.Text.StringBuilder> History = new Dictionary<string, StringBuilder>();
+    public static UiManager Instance { get; protected set; }
 
-    public GameObject SelectedObject { get; set; }
+    public Queue<string> ConsoleHistory = new Queue<string>();
 
-	// Use this for initialization
-	void Start () {
-		
-        foreach ( var widget in GetComponentsInChildren<UnityEngine.UI.Text>() ) {
-            Widget.Add(widget.gameObject.name, widget);
-            History.Add(widget.gameObject.name, new StringBuilder());
+    public TextAsset Readme;
+    public GameObject Mothership;
+    public UnityEngine.UI.Text MothershipObjectStatus;
+    public UnityEngine.UI.Text SelectedObjectStatus;
+
+    public bool IsUpdateRequired { get; set; }
+
+    private GameObject _SelectedObject;
+    public GameObject SelectedObject {
+        get {
+            return _SelectedObject;
         }
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+        set {
+            if (_SelectedObject != null) {
+                _SelectedObject.BroadcastMessage("OnSelectionEnd", options: SendMessageOptions.DontRequireReceiver);
+            }
 
-    public void AddLine(string widget, string line)
-    {
-        History[widget].Append("\n" + line);
+            _SelectedObject = value;
 
-        if (History[widget].ToString().Count(m => m == '\n') > 20)
-            History[widget].Remove(0, History[widget].ToString().IndexOf('\n', 1));
-
-        Widget[widget].text = History[widget].ToString();
+            if (_SelectedObject != null) {
+                SelectedObjectAgent = _SelectedObject.GetComponent<AgentAI.Agent>();
+                SelectedObjectContainers = _SelectedObject.GetComponent<Resources.ContainerCollection>();
+                _SelectedObject.BroadcastMessage("OnSelectionStart",options: SendMessageOptions.DontRequireReceiver);
+            }
+        }
     }
+
+
+    private AgentAI.Agent MothershipAgent;
+    private AgentAI.Agent SelectedObjectAgent;
+
+    private Resources.ContainerCollection MothershipContainers;
+    private Resources.ContainerCollection SelectedObjectContainers;
+
+
+    // Use this for initialization
+    void Start() {
+        Instance = this;
+
+
+        MothershipAgent = Mothership.GetComponent<AgentAI.Agent>();
+        MothershipContainers = Mothership.GetComponent<Resources.ContainerCollection>();
+
+        IsUpdateRequired = true;
+    }
+
+    // Update is called once per frame
+    void Update() {
+
+        if (IsUpdateRequired) {
+            //IsUpdateRequired = false;
+
+            if (SelectedObject != null) {
+                switch (SelectedObject.tag) {
+                    case "Droneship":
+                        SelectedObjectStatus.text = "Selected: " + SelectedObject.name + "\n" + SelectedObjectAgent.Log + "\n" + SelectedObjectContainers.StatusAsString();
+                        break;
+                    case "Asteroid":
+                        SelectedObjectStatus.text = "Selected: " + SelectedObject.name + "\n" + SelectedObjectContainers.StatusAsString();
+                        break;
+                    case "Enemy":
+                        SelectedObjectStatus.text = "Selected: " + SelectedObject.name + "\n" + SelectedObjectAgent.Log;
+                        break;
+                    default:
+                        SelectedObjectStatus.text = Readme.text;
+                        break;
+                }
+            } else {
+                SelectedObjectStatus.text = Readme.text;
+            }
+
+            MothershipObjectStatus.text = MothershipAgent.Log + "\n" + MothershipContainers.StatusAsString();
+        }
+    }
+
 }

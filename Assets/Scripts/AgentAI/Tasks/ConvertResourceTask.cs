@@ -26,6 +26,9 @@ namespace AgentAI.Tasks {
 
         public override float Priority {
             get {
+                if (Produce.Type == ResourceType._NONE)
+                    return MaxPriority; // No Production item, this must be a resource sink: Set Max Priority.
+
                 if (Produce.Location == null || Containers[Produce.Location].GetQuantity(Produce.Type) >= QtyGlutted)
                     return 0.0f; // No Destination Location, or "Glut" Quantity already available, Task has zero priority
 
@@ -33,7 +36,7 @@ namespace AgentAI.Tasks {
             }
         }
 
-        public override bool CanExit {  get { return Containers[Produce.Location].GetQuantity(Produce.Type) >= QtyStarved; } }
+        public override bool CanExit {  get { return Produce.Type == ResourceType._NONE ? true : Containers[Produce.Location].GetQuantity(Produce.Type) >= QtyStarved; } }
 
         public override void Enter() {
             
@@ -43,7 +46,7 @@ namespace AgentAI.Tasks {
             
         }
 
-        public new void UpdateTask() {
+        public override void UpdateTask() {
                 DoConversion();
         }
 
@@ -52,10 +55,6 @@ namespace AgentAI.Tasks {
             Containers = GetComponent<ContainerCollection>();
         }
 
-        // Update is called once per frame
-        void Update() {
-
-        }
 
         void DoConversion() {
             if (Containers[Produce.Location].GetQuantity(Produce.Type) >= QtyGlutted)

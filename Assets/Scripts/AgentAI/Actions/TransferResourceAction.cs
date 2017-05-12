@@ -14,6 +14,7 @@ namespace AgentAI.Actions
         float UnitsPerSecond;
         
         public override bool IsComplete { get { return (Src.TotalQuantity <= 0 || Dst.PercentFull >= 1.0f); } }
+        
 
         public TransferResourceAction(ResourceContainer src, ResourceContainer dst, float unitsPerSecond)
         {
@@ -24,7 +25,6 @@ namespace AgentAI.Actions
 
         public override void Enter()
         {
-
         }
 
         public override void Exit()

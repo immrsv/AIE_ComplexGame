@@ -32,7 +32,7 @@ namespace AgentAI.Actions
 
         public override void Exit()
         {
-            NCS.SetIdle();
+            NCS.SetHold();
         }
 
         public override void UpdateAction()

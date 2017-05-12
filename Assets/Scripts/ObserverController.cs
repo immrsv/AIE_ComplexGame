@@ -67,19 +67,18 @@ public class ObserverController : MonoBehaviour {
                                                                          // selected item, do it here,
                                                                          // then select the new one:
 
-                
-                if (Selected != null && Selected.GetComponent<AgentAI.Agent>() != null)
-                    Selected.GetComponent<AgentAI.Agent>().DisplayDebug = false;
-
 
                 Selected = hit.transform.gameObject;
                 Debug.Log("Mouse Select: " + Selected.name);
 
-                if (Selected != null && Selected.GetComponent<AgentAI.Agent>() != null)
-                    Selected.GetComponent<AgentAI.Agent>().DisplayDebug = false;
-
                 // do whatever you want with the newly selected
                 // object
+                UiManager.Instance.SelectedObject = Selected;
+                UiManager.Instance.IsUpdateRequired = true;
+            } else
+            {
+                UiManager.Instance.SelectedObject = null;
+                UiManager.Instance.IsUpdateRequired = true;
             }
         }
     }

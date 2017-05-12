@@ -20,6 +20,8 @@ public class FlightControlSystem : MonoBehaviour {
 
     private Rigidbody rb;
 
+    public Vector3 Drift;
+
     private void Start() {
         rb = GetComponent<Rigidbody>();
 
@@ -47,7 +49,7 @@ public class FlightControlSystem : MonoBehaviour {
 
         rb.velocity = Vector3.ClampMagnitude(desiredWorldMotion.Linear, MaxSpeed);
         rb.angularVelocity = desiredWorldMotion.Angular;
-
-
+        
+        rb.velocity += Drift;
     }
 }
