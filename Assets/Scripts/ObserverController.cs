@@ -11,30 +11,30 @@ public class ObserverController : MonoBehaviour {
 
     private GameObject Selected;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start() {
         rb = GetComponent<Rigidbody>();
     }
-	
-    void FixedUpdate()
-    {
-            
+
+    void FixedUpdate() {
+
     }
 
-	// Update is called once per frame
-	void Update () {
+    // Update is called once per frame
+    void Update() {
         Vector3 move = new Vector3();
-        move += Input.GetAxis("Horizontal") * Vector3.right;
-        move += Input.GetAxis("Vertical") * Vector3.forward;
+        move += Input.GetAxis("Horizontal") * transform.right;
+        move += Input.GetAxis("Vertical") * transform.forward;
+        move += Input.GetAxis("Jump") * transform.up;
         move *= cameraSpeed;
 
-        rb.velocity = transform.TransformDirection(move);
+        rb.velocity = move;
 
         Vector3 rotate = new Vector3();
         rotate.z = -Input.GetAxis("Roll");
 
-        if ( Input.GetMouseButtonDown(2)) { // Middle Mouse toggles mouse capture
-            if ( Cursor.lockState != CursorLockMode.Locked ) {
+        if (Input.GetMouseButtonDown(2)) { // Middle Mouse toggles mouse capture
+            if (Cursor.lockState != CursorLockMode.Locked) {
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
             } else {
@@ -52,7 +52,7 @@ public class ObserverController : MonoBehaviour {
 
         rb.angularVelocity = transform.TransformDirection(rotate);
 
-        
+
     }
 
     private void HandleInteraction() {
@@ -60,7 +60,7 @@ public class ObserverController : MonoBehaviour {
         if (Input.GetMouseButtonDown(0)) { // if left button pressed...
                                            // create a ray passing through the mouse pointer:
 
-            var ray =  Camera.main.ScreenPointToRay(Input.mousePosition);
+            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit = new RaycastHit();
             if (Physics.Raycast(ray, out hit, float.PositiveInfinity)) { // if something hit...
                                                                          // if you must do something with the previously
@@ -75,8 +75,7 @@ public class ObserverController : MonoBehaviour {
                 // object
                 UiManager.Instance.SelectedObject = Selected;
                 UiManager.Instance.IsUpdateRequired = true;
-            } else
-            {
+            } else {
                 UiManager.Instance.SelectedObject = null;
                 UiManager.Instance.IsUpdateRequired = true;
             }
