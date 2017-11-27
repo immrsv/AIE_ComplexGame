@@ -158,8 +158,9 @@ public class NavigationControlSystem : MonoBehaviour {
         targetDirn.Scale(new Vector3(speed, speed, speed));
 
         var targetLocalDirn = transform.InverseTransformDirection(targetDirn);
-        var targetLocalRotn = (Quaternion.FromToRotation(Vector3.forward, targetLocalDirn)).eulerAngles;
-        targetLocalRotn.Scale(new Vector3(0.2f, 0.2f, 0.2f));
+        //var targetLocalRotn = (Quaternion.FromToRotation(Vector3.forward, targetLocalDirn)).eulerAngles;
+        var targetLocalRotn = Vector3.SignedAngle(Vector3.forward, targetLocalDirn, Vector3.up);
+        //targetLocalRotn.Scale(new Vector3(0.2f, 0.2f, 0.2f));
 
         desiredMotion.Linear = targetLocalDirn;
         desiredMotion.Angular = targetLocalRotn;
@@ -186,8 +187,9 @@ public class NavigationControlSystem : MonoBehaviour {
         targetDirn.Scale(new Vector3(speed, speed, speed));
 
         var targetLocalDirn = transform.InverseTransformDirection(targetDirn);
-        var targetLocalRotn = (Quaternion.FromToRotation(Vector3.forward, targetLocalDirn)).eulerAngles;
-        targetLocalRotn.Scale(new Vector3(0.2f, 0.2f, 0.2f));
+        //var targetLocalRotn = (Quaternion.FromToRotation(Vector3.forward, targetLocalDirn)).eulerAngles;
+        var targetLocalRotn = Vector3.SignedAngle(Vector3.forward, targetLocalDirn, Vector3.up);
+        //targetLocalRotn.Scale(new Vector3(0.2f, 0.2f, 0.2f));
 
         desiredMotion.Linear = targetLocalDirn;
         desiredMotion.Angular = targetLocalRotn;

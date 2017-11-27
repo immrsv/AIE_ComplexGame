@@ -5,5 +5,5 @@ using UnityEngine;
 [System.Serializable]
 public class PhysicsIntent {
     public Vector3 Linear;
-    public Vector3 Angular;
+    public float Angular;
 }
